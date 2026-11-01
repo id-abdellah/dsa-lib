@@ -8,64 +8,44 @@ class SLLNode<T> {
 }
 
 export class SinglyLinkedList<T> {
-	private head: SLLNode<T> | null;
-	private tail: SLLNode<T> | null;
-	private size: number;
+	private head: SLLNode<T> | null = null;
+	private tail: SLLNode<T> | null = null;
+	private size: number = 0;
 
-	constructor() {
-		this.head = null;
-		this.tail = null;
-		this.size = 0;
-	}
-
-	// utils
-
-	static fromArray<T>(array: T[]): SinglyLinkedList<T> {
-		const list: SinglyLinkedList<T> = new SinglyLinkedList<T>();
+	static fromArray<ArrayType>(array: ArrayType[]): SinglyLinkedList<ArrayType> {
+		const list: SinglyLinkedList<ArrayType> = new SinglyLinkedList<ArrayType>();
 		for (const item of array) {
-			list.insertAtEnd(item);
+			list.addLast(item);
 		}
 		return list;
 	}
 
-	private _resetSize(): void {
-		this.size = 0;
-	}
-
-	private _incrementSize(): void {
-		this.size++;
-	}
-
-	private _decrementSize(): void {
-		this.size--;
-	}
-
-	public get length(): number {
+	public getSize(): number {
 		return this.size;
 	}
 
-	public get getHead(): T | null {
+	public getHead(): T | null {
 		if (this.head) return this.head.value;
 		return null;
 	}
 
-	public get getTail(): T | null {
+	public getTail(): T | null {
 		if (this.tail) return this.tail.value;
 		return null;
 	}
 
 	public clear(): void {
 		this.head = this.tail = null;
-		this._resetSize();
+		this.size = 0;
 	}
 
 	public isEmpty(): boolean {
 		return this.size === 0;
 	}
 
-	private _getNodeByIndex(index: number): SLLNode<T> | null {
+	private getNode(index: number): SLLNode<T> | null {
+		if (index < 0 || index >= this.size) throw new Error("Out of bounds index!");
 		if (!this.head) return null;
-		if (index < 0 || index >= this.length) return null;
 		let current = this.head;
 		let counter: number = 0;
 		while (counter !== index) {
@@ -101,59 +81,48 @@ export class SinglyLinkedList<T> {
 		this.head = prev;
 	}
 
-	// Insertions
-
-	public insertAtEnd(value: T): void {
+	public addLast(value: T): boolean {
 		const newNode: SLLNode<T> = new SLLNode<T>(value);
 		if (!this.head) {
 			this.head = newNode;
 			this.tail = newNode;
-		} else if (this.length === 1) {
-			this.head.next = newNode;
-			this.tail = newNode;
 		} else {
-			if (!this.tail) return;
-			this.tail.next = newNode;
+			this.tail!.next = newNode;
 			this.tail = newNode;
 		}
-		this._incrementSize();
+		this.size++;
+		return true;
 	}
 
-	public insertAtFront(value: T): void {
-		if (!this.head) return this.insertAtEnd(value);
+	public addFirst(value: T): boolean {
+		if (!this.head) return this.addLast(value);
 
 		const newNode: SLLNode<T> = new SLLNode<T>(value);
 
-		if (this.length === 1) {
-			this.head = newNode;
-			this.head.next = this.tail;
-		} else {
-			newNode.next = this.head;
-			this.head = newNode;
-		}
-		this._incrementSize();
+		newNode.next = this.head;
+		this.head = newNode;
+
+		this.size++;
+		return true;
 	}
 
-	public insertAtPos(pos: number, value: T): void {
-		if (pos < 0 || pos > this.length) throw new Error("Invalid position. the position shouldn't be less than 0 or greater than list length");
-		if (pos === 0) return this.insertAtFront(value);
-		if (pos === this.length) return this.insertAtEnd(value);
-
+	public addAt(index: number, value: T): boolean {
+		if (index < 0 || index > this.size) throw new Error("Out of bouds index!");
+		if (index === 0) return this.addFirst(value);
+		if (index === this.size) return this.addLast(value);
 		const newNode: SLLNode<T> = new SLLNode<T>(value);
-
-		let prevNode = this._getNodeByIndex(pos - 1);
-		if (!prevNode) return;
+		let prevNode = this.getNode(index - 1);
+		if (!prevNode) return false;
 		newNode.next = prevNode.next;
 		prevNode.next = newNode;
-		this._incrementSize();
+		this.size++;
+		return true;
 	}
 
-	// Deletions
-
-	public deleteHead(): T | null {
+	public removeFirst(): T | null {
 		if (!this.head) return null;
 		let returnedValue: T;
-		if (this.length === 1) {
+		if (this.size === 1) {
 			returnedValue = this.head.value;
 			this.head = null;
 			this.tail = null;
@@ -161,48 +130,44 @@ export class SinglyLinkedList<T> {
 			returnedValue = this.head.value;
 			this.head = this.head.next;
 		}
-		this._decrementSize();
+		this.size--;
 		return returnedValue;
 	}
 
-	public deleteTail(): T | null {
-		if (!this.head || this.length === 1) return this.deleteHead();
+	public removeLast(): T | null {
+		if (!this.head || this.size === 1) return this.removeFirst();
 		if (!this.tail) return null;
 		let returnedValue: T = this.tail.value;
-		let prev = this._getNodeByIndex(this.length - 2);
+		let prev = this.getNode(this.size - 2);
 		if (!prev) return null;
 		prev.next = null;
 		this.tail = prev;
 
-		this._decrementSize();
+		this.size--;
 		return returnedValue;
 	}
 
-	public deletePos(index: number): T | null {
-		if (index < 0 || index >= this.length) throw new Error("Invalid index. the index shouldn't be less than 0 or greater than list length");
+	public removeAt(index: number): T | null {
+		if (index < 0 || index >= this.size) throw new Error("Out of bounds index!");
 		if (!this.head) return null;
-		if (index === 0) return this.deleteHead();
-		if (index === this.length - 1) return this.deleteTail();
-		let prev = this._getNodeByIndex(index - 1);
+		if (index === 0) return this.removeFirst();
+		if (index === this.size - 1) return this.removeLast();
+		let prev = this.getNode(index - 1);
 		if (!prev || !prev.next) return null;
 		const returnedValue: T = prev.next.value;
 		prev.next = prev.next.next;
-		this._decrementSize();
+		this.size--;
 		return returnedValue;
 	}
 
-	// Updating
-
-	public update(index: number, newValue: T): void {
-		const node: SLLNode<T> | null = this._getNodeByIndex(index);
+	public set(index: number, newValue: T): void {
+		const node: SLLNode<T> | null = this.getNode(index);
 		if (!node) throw new Error("Index out of bounds");
 		node.value = newValue;
 	}
 
-	// Searching
-
 	public at(index: number): T | null {
-		const node = this._getNodeByIndex(index);
+		const node = this.getNode(index);
 		return node ? node.value : null;
 	}
 
@@ -237,8 +202,6 @@ export class SinglyLinkedList<T> {
 		return -1;
 	}
 
-	// Iterations
-
 	public forEach(cb: (value: T, index: number) => void): void {
 		let current: SLLNode<T> | null = this.head;
 		let counter: number = 0;
@@ -254,7 +217,7 @@ export class SinglyLinkedList<T> {
 		let current = this.head;
 		let counter: number = 0;
 		while (current) {
-			newList.insertAtEnd(cb(current.value, counter));
+			newList.addLast(cb(current.value, counter));
 			current = current.next;
 			counter++;
 		}
@@ -266,7 +229,7 @@ export class SinglyLinkedList<T> {
 		let current = this.head;
 		let counter: number = 0;
 		while (current) {
-			if (cb(current.value, counter)) newList.insertAtEnd(current.value);
+			if (cb(current.value, counter)) newList.addLast(current.value);
 			current = current.next;
 			counter++;
 		}
