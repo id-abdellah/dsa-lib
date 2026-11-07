@@ -1,72 +1,35 @@
-export type StackOptions = {
-	maxSize?: number;
-};
+import { SinglyLinkedList } from "../linkedList";
 
 export class Stack<T> {
-	private stack: T[];
-	private maxSize?: number;
+	private items: T[] = [];
+	private maxSize: number;
 
-	constructor(options?: StackOptions) {
-		this.stack = [];
-		const maxSize = options?.maxSize;
-		Stack.maxSizeValidator(maxSize);
+	constructor(maxSize: number = Infinity) {
 		this.maxSize = maxSize;
 	}
 
-	private static maxSizeValidator(v: StackOptions["maxSize"]): void {
-		if (v === undefined) return;
-		if (!Number.isInteger(v)) throw new TypeError("maxSize must be a valid integer.");
-		if (v <= 0) throw new RangeError("maxSize must be greater than 0.");
-	}
-
-	public get size(): number {
-		return this.stack.length;
-	}
-
-	public clear(): void {
-		this.stack.length = 0;
-	}
-
 	public isEmpty(): boolean {
-		return this.size === 0;
+		return this.items.length === 0;
 	}
 
-	public toArray(): T[] {
-		return [...this.stack];
+	public size(): number {
+		return this.items.length;
 	}
 
-	public clone(): Stack<T> {
-		let newStack: Stack<T>;
-		if (this.maxSize !== undefined) {
-			newStack = new Stack<T>({ maxSize: this.maxSize });
-		} else {
-			newStack = new Stack<T>();
-		}
-		newStack.stack = structuredClone(this.stack);
-		return newStack;
-	}
-
-	static fromArray<K>(arr: K[], options?: StackOptions): Stack<K> {
-		const maxSize = options?.maxSize;
-
-		Stack.maxSizeValidator(maxSize);
-		if (maxSize !== undefined && arr.length > maxSize) throw new RangeError("Initial array exceeds maxSize.");
-
-		let stack = new Stack<K>(options);
-		stack.stack = structuredClone(arr);
-		return stack;
-	}
-
-	public peek(): T | undefined {
-		return this.stack.at(-1);
-	}
-
-	public push(value: T): void {
-		if (this.maxSize !== undefined && this.size >= this.maxSize) throw new RangeError("Stack overflow: maxSize reached.");
-		this.stack.push(value);
+	public push(item: T): void {
+		if (this.size() >= this.maxSize) throw new Error("Stack Overflow!");
+		this.items.push(item);
 	}
 
 	public pop(): T | undefined {
-		return this.stack.pop();
+		return this.items.pop();
+	}
+
+	public peek(): T | undefined {
+		return this.items[this.size() - 1];
+	}
+
+	public clear(): void {
+		this.items = [];
 	}
 }
